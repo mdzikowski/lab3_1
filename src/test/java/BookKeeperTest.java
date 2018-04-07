@@ -76,4 +76,20 @@ public class BookKeeperTest {
         assertThat(resultInvoice.getItems().size(), is(0));
     }
 
+    @Test
+    public void invoiceRequestShouldReturnCorrectGrosValueWhenHavingTwoItems(){
+        ProductData productData1 = new ProductData(Id.generate(), new Money(20), "Item", ProductType.FOOD, new Date());
+        ProductData productData2 = new ProductData(Id.generate(), new Money(10), "Item", ProductType.FOOD, new Date());
+        RequestItem requestItem1 = new RequestItem(productData1, 1, new Money(10));
+        RequestItem requestItem2 = new RequestItem(productData2, 2, new Money(20));
+        Tax tax = new Tax(new Money(0.25), "Item Tax");
+
+        when(invoiceRequest.getItems()).thenReturn(Arrays.asList(requestItem1, requestItem2));
+        when(taxPolicy.calculateTax(requestItem1.getProductData().getType(), requestItem1.getTotalCost())).thenReturn(tax);
+        when(taxPolicy.calculateTax(requestItem2.getProductData().getType(), requestItem2.getTotalCost())).thenReturn(tax);
+
+        Invoice resultInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+        assertThat(resultInvoice.getGros(), is(new Money(30.5)));
+    }
+
 }
