@@ -64,4 +64,16 @@ public class BookKeeperTest {
         verify(taxPolicy, times(1)).calculateTax(requestItem2.getProductData().getType(), requestItem2.getTotalCost());
     }
 
+    @Test
+    public void invoiceRequestWithNoItemsShouldReturnInvoiceWithNoItems(){
+        ProductData productData = new ProductData(Id.generate(), new Money(10), "Item", ProductType.FOOD, new Date());
+        RequestItem requestItem = new RequestItem(productData, 10, new Money(10));
+
+        when(invoiceRequest.getItems()).thenReturn(Collections.<RequestItem>emptyList());
+        when(taxPolicy.calculateTax(ProductType.FOOD, requestItem.getTotalCost())) .thenReturn(new Tax(new Money(0.25), "Item Tax"));
+
+        Invoice resultInvoice = bookKeeper.issuance(invoiceRequest, taxPolicy);
+        assertThat(resultInvoice.getItems().size(), is(0));
+    }
+
 }
