@@ -54,5 +54,13 @@ public class AddProductCommandHandlerTest {
         Whitebox.setInternalState(handler, "suggestionService", suggestionServ);
 
     }
+    @Test
+    public void addProductCommandShouldNotSuggestEquivalentWhenGivenAvailableProduct(){
+        when(productRepo.load(addProductCommand.getProductId())).thenReturn(product);
+        when(reservationRepo.load(addProductCommand.getOrderId())).thenReturn(reservation);
 
+        handler.handle(addProductCommand);
+
+        verify(suggestionServ, Mockito.times(0)).suggestEquivalent(product, client);
+    }
 }
