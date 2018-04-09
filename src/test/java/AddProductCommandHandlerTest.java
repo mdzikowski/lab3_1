@@ -1,5 +1,6 @@
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
 import pl.com.bottega.ecommerce.canonicalmodel.publishedlanguage.ClientData;
@@ -15,6 +16,7 @@ import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
 import pl.com.bottega.ecommerce.sales.domain.reservation.ReservationRepository;
 import pl.com.bottega.ecommerce.sharedkernel.Money;
+import pl.com.bottega.ecommerce.system.application.SystemContext;
 
 import java.util.Date;
 
@@ -32,6 +34,7 @@ public class AddProductCommandHandlerTest {
     private AddProductCommand addProductCommand;
     private Product product;
     private Product suggestedProduct;
+    private Product productNotAvailable;
     private Reservation reservation;
     private Client client;
 
@@ -44,23 +47,33 @@ public class AddProductCommandHandlerTest {
         suggestionServ = mock(SuggestionService.class);
         product = new Product(Id.generate(), new Money(10), "sampleProduct", ProductType.DRUG);
         suggestedProduct = new Product(Id.generate(), new Money(10), "sampleProduct", ProductType.DRUG);
+
         client = new Client();
         reservation = new Reservation(Id.generate(), Reservation.ReservationStatus.OPENED, new ClientData(Id.generate(), "Kowalski"), new Date());
         addProductCommand = new AddProductCommand(Id.generate(), product.getId(), 11);
+
 
         Whitebox.setInternalState(handler, "reservationRepository", reservationRepo);
         Whitebox.setInternalState(handler, "clientRepository", clientRepo);
         Whitebox.setInternalState(handler, "productRepository", productRepo);
         Whitebox.setInternalState(handler, "suggestionService", suggestionServ);
 
+        when(reservationRepo.load(addProductCommand.getOrderId())).thenReturn(reservation);
+        when(suggestionServ.suggestEquivalent(product, client)).thenReturn(suggestedProduct);
+
     }
     @Test
     public void addProductCommandShouldNotSuggestEquivalentWhenGivenAvailableProduct(){
         when(productRepo.load(addProductCommand.getProductId())).thenReturn(product);
-        when(reservationRepo.load(addProductCommand.getOrderId())).thenReturn(reservation);
-
         handler.handle(addProductCommand);
 
         verify(suggestionServ, Mockito.times(0)).suggestEquivalent(product, client);
+    }
+    @Test
+    public void saveMethodShouldBeCalledOnceWhenGivenAvailableItem(){
+        when(productRepo.load(addProductCommand.getProductId())).thenReturn(product);
+        handler.handle(addProductCommand);
+
+        verify(reservationRepo, Mockito.times(1)).save(reservation);
     }
 }
