@@ -11,6 +11,7 @@ import pl.com.bottega.ecommerce.sales.domain.client.Client;
 import pl.com.bottega.ecommerce.sales.domain.client.ClientRepository;
 import pl.com.bottega.ecommerce.sales.domain.equivalent.SuggestionService;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.Product;
+import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductBuilder;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductRepository;
 import pl.com.bottega.ecommerce.sales.domain.productscatalog.ProductType;
 import pl.com.bottega.ecommerce.sales.domain.reservation.Reservation;
@@ -45,8 +46,7 @@ public class AddProductCommandHandlerTest {
         clientRepo = mock(ClientRepository.class);
         productRepo = mock(ProductRepository.class);
         suggestionServ = mock(SuggestionService.class);
-        product = new Product(Id.generate(), new Money(10), "sampleProduct", ProductType.DRUG);
-        suggestedProduct = new Product(Id.generate(), new Money(10), "sampleProduct", ProductType.DRUG);
+        product = new ProductBuilder().withId(Id.generate()).withName("sampleProduct").withPrice(new Money(100)).withType(ProductType.DRUG).build();
 
         client = new Client();
         reservation = new Reservation(Id.generate(), Reservation.ReservationStatus.OPENED, new ClientData(Id.generate(), "Kowalski"), new Date());
@@ -59,7 +59,6 @@ public class AddProductCommandHandlerTest {
         Whitebox.setInternalState(handler, "suggestionService", suggestionServ);
 
         when(reservationRepo.load(addProductCommand.getOrderId())).thenReturn(reservation);
-        when(suggestionServ.suggestEquivalent(product, client)).thenReturn(suggestedProduct);
 
     }
     @Test
