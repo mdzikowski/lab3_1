@@ -66,4 +66,21 @@ public class BookKeeperTest {
 
         verify(mockedTaxPolicy,times(2)).calculateTax(ProductType.STANDARD,Money.ZERO);
 }
+    @Test public void invoiceWithoutPositionsShouldReturnEmptyInvoice() throws Exception{
+
+        ClientData client = new ClientData(id, "test");
+        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
+
+        InvoiceFactory mockedInvoiceFactory = mock(InvoiceFactory.class);
+        bookKeeper = new BookKeeper(mockedInvoiceFactory);
+
+
+        when(mockedInvoiceFactory.create(client)).thenReturn(new Invoice(id,client));
+        when(mockedTaxPolicy.calculateTax(ProductType.STANDARD,Money.ZERO)).thenReturn(new Tax(Money.ZERO,"tax"));
+
+        Invoice invoiceResult = bookKeeper.issuance(invoiceRequest,mockedTaxPolicy);
+
+        assertThat(invoiceResult.getItems().size(),is(0));
+
+    }
 }
