@@ -83,4 +83,21 @@ public class BookKeeperTest {
         assertThat(invoiceResult.getItems().size(),is(0));
 
     }
+    
+    @Test public void InvoiceWithoudPositionsShouldNotCall_calculateTax() throws Exception{
+        ClientData client = new ClientData(id, "test");
+        InvoiceRequest invoiceRequest = new InvoiceRequest(client);
+
+        InvoiceFactory mockedInvoiceFactory = mock(InvoiceFactory.class);
+        bookKeeper = new BookKeeper(mockedInvoiceFactory);
+
+
+        when(mockedInvoiceFactory.create(client)).thenReturn(new Invoice(id,client));
+        when(mockedTaxPolicy.calculateTax(ProductType.STANDARD,Money.ZERO)).thenReturn(new Tax(Money.ZERO,"tax"));
+
+        Invoice invoiceResult = bookKeeper.issuance(invoiceRequest,mockedTaxPolicy);
+
+        verify(mockedTaxPolicy,times(0)).calculateTax(ProductType.STANDARD,Money.ZERO);
+
+    }
 }
